@@ -1,5 +1,6 @@
 
 from typing import List
+import math
 
 import numpy as np
 import matplotlib.pyplot as mpl
@@ -51,9 +52,10 @@ class NeuralNet:
         activation = input_nodes
 
         for i in range(self._num_layers - 1):
-            activation = NeuralNet.sigmoid(np.dot(self._weights[i], activation) + self._biases[i])
+            z_val = np.dot(self._weights[i], activation) + self._biases[i]
+            activation = NeuralNet.sigmoid(z_val)
 
-        return NeuralNet.sigmoid(activation)
+        return activation
 
     def apply_training_data(self,
                             training_data: List[LearningDatum]
@@ -149,7 +151,7 @@ class NeuralNet:
 
     @staticmethod
     def sigmoid(vector):
-        return 1.0 / (1.0 + np.exp(vector))
+        return 1.0 / (1.0 + np.exp(-vector))
 
     @staticmethod
     def sigmoid_derivative(vector):
@@ -169,9 +171,32 @@ def generate_learning_data(size):
         else:
             output[0] = 1
 
-        data.append(LearningDatum([in_vals[i]], output))
+        n = in_vals[i]
+        byte_array = int_to_byte_array(n)
+
+        data.append(LearningDatum(byte_array, output))
 
     return data
+
+
+def int_to_byte_array(n):
+    ba = [0 for i in range(64)]
+
+    for i in range(63, 0, -1):
+        ba[i] = n % 2
+        n = math.floor(n / 2)
+
+    return ba
+
+
+def byte_array_to_int(ba):
+    n = 0
+
+    for i in range(63, 0, -1):
+        power_of_two = 2 ** (63 - i)
+        n += ba[i] * power_of_two
+
+    return n
 
 
 def run_test(nn, epoch_number):
@@ -198,11 +223,11 @@ def run_test(nn, epoch_number):
 def main():
     np.random.seed(666)
 
-    eta = 10.0
-    hidden_layer_size = 50
-    nn = NeuralNet([1, hidden_layer_size, 2], learning_rate=eta)
+    eta = 4.5
+    hidden_layer_size = 30
+    nn = NeuralNet([64, hidden_layer_size, 2], learning_rate=eta)
 
-    number_of_epochs = 20
+    number_of_epochs = 30
 
     x_axis = []
     y_axis = []
