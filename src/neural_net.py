@@ -1,6 +1,7 @@
 
 from typing import List
-import math
+
+import utilities
 
 import numpy as np
 import matplotlib.pyplot as mpl
@@ -158,6 +159,18 @@ class NeuralNet:
         return NeuralNet.sigmoid(vector) * (1 - NeuralNet.sigmoid(vector))
 
 
+def run_model(hls, eta, num_epochs, x_axis, y_axis):
+    nn = NeuralNet([64, hls, 2], learning_rate=eta)
+
+    for i in range(num_epochs):
+        training_data = generate_learning_data(50)
+        nn.apply_training_data(training_data)
+
+        correct_ratio = run_tests(nn, i)
+        x_axis.append(i)
+        y_axis.append(correct_ratio)
+
+
 def generate_learning_data(size):
     data = []
 
@@ -172,34 +185,14 @@ def generate_learning_data(size):
             output[0] = 1
 
         n = in_vals[i]
-        byte_array = int_to_byte_array(n)
+        byte_array = utilities.int_to_byte_array(n)
 
         data.append(LearningDatum(byte_array, output))
 
     return data
 
 
-def int_to_byte_array(n):
-    ba = [0 for i in range(64)]
-
-    for i in range(63, 0, -1):
-        ba[i] = n % 2
-        n = math.floor(n / 2)
-
-    return ba
-
-
-def byte_array_to_int(ba):
-    n = 0
-
-    for i in range(63, 0, -1):
-        power_of_two = 2 ** (63 - i)
-        n += ba[i] * power_of_two
-
-    return n
-
-
-def run_test(nn, epoch_number):
+def run_tests(nn, epoch_number):
     num_tests = 0
     num_correct = 0
 
@@ -225,20 +218,12 @@ def main():
 
     eta = 4.5
     hidden_layer_size = 30
-    nn = NeuralNet([64, hidden_layer_size, 2], learning_rate=eta)
-
     number_of_epochs = 30
 
     x_axis = []
     y_axis = []
 
-    for i in range(number_of_epochs):
-        training_data = generate_learning_data(50)
-        nn.apply_training_data(training_data)
-
-        correct_ratio = run_test(nn, i)
-        x_axis.append(i)
-        y_axis.append(correct_ratio)
+    run_model(hidden_layer_size, eta, number_of_epochs, x_axis, y_axis)
 
     mpl.plot(x_axis, y_axis)
     mpl.title("Neural Net Correctness Over Time (HLS = {}, eta = {})".format(hidden_layer_size, eta))
