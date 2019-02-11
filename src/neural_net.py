@@ -163,7 +163,7 @@ def run_model(hls, eta, num_epochs, x_axis, y_axis):
     nn = NeuralNet([64, hls, 2], learning_rate=eta)
 
     for i in range(num_epochs):
-        training_data = generate_learning_data(50)
+        training_data = generate_learning_data(50, low_limit=1, high_limit=1_500_000)
         nn.apply_training_data(training_data)
 
         correct_ratio = run_tests(nn, i)
@@ -171,10 +171,10 @@ def run_model(hls, eta, num_epochs, x_axis, y_axis):
         y_axis.append(correct_ratio)
 
 
-def generate_learning_data(size):
+def generate_learning_data(size, low_limit=1, high_limit=1000):
     data = []
 
-    in_vals = np.random.randint(1, 1000, size=size)
+    in_vals = np.random.randint(low_limit, high_limit, size=size)
 
     for i in range(len(in_vals)):
         output = [0, 0]
@@ -196,7 +196,7 @@ def run_tests(nn, epoch_number):
     num_tests = 0
     num_correct = 0
 
-    test_data = generate_learning_data(10000)
+    test_data = generate_learning_data(10000, low_limit=1_500_393, high_limit=2_500_000_000)
     for datum in test_data:
         output_nodes = nn.evaluate_input(datum.input_nodes)
 
@@ -218,7 +218,7 @@ def main():
 
     eta = 4.5
     hidden_layer_size = 30
-    number_of_epochs = 30
+    number_of_epochs = 75
 
     x_axis = []
     y_axis = []
